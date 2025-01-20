@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Mastermind</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        #score-board {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        #timer {
+            font-size: 1.5em;
+            color: #FF6347;
+        }
+        #high-score {
+            font-size: 1.5em;
+            color: #32CD32;
+        }
+        #quiz-container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        #vocab-word {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #4A90E2;
+        }
+        #definition-column {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .definition-card {
+            background-color: #f7f7f7;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+        .definition-card:hover {
+            background-color: #eeeeee;
+        }
+        .correct {
+            background-color: #32CD32;
+        }
+        .incorrect {
+            background-color: #FF6347;
+            animation: shake 0.5s ease;
+        }
+        .definition-card.selected {
+            background-color: #7fff7f;
+        }
+        .button {
+            padding: 15px 25px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .game-over {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-top: 30px;
+        }
+        #start-btn {
+            background-color: #FF6347;
+            margin-top: 30px;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="score-board">
+        <div id="high-score">High Score: 0</div>
+        <div id="timer">Time Left: 60</div>
+    </div>
+
+    <div id="quiz-container">
+        <div id="vocab-word">Click "Start" to Begin</div>
+        <div id="definition-column"></div>
+    </div>
+
+    <button id="start-btn" class="button" onclick="startGame()">Start Game</button>
+    <div id="game-over" class="game-over" style="display: none;"></div>
+
+    <script>
+        const words = [
+            { word: "morose", definition: "sullen" },
+            { word: "jovial", definition: "cheerful" },
+            { word: "droll", definition: "amusing" },
+            { word: "listless", definition: "uninterested" },
+            { word: "confound", definition: "to perplex" },
+            { word: "sallow", definition: "sickly yellow" },
+            { word: "wince", definition: "to shrink involuntarily" },
+            { word: "grimace", definition: "a sharp expression" },
+            { word: "diffidence", definition: "lack of confidence" },
+            { word: "evince", definition: "to show" },
+            { word: "exquisite", definition: "beautifully made" },
+            { word: "ostentatious", definition: "showy" },
+            { word: "acute", definition: "sharp" },
+            { word: "inexorable", definition: "inevitable" },
+            { word: "condescend", definition: "to patronize" },
+            { word: "indolent", definition: "lazy" },
+            { word: "grotesque", definition: "distorted" },
+            { word: "doleful", definition: "mournful" },
+            { word: "allude", definition: "indirectly refer to" },
+            { word: "alacrity", definition: "eagerness" }
+        ];
+
+        let score = 0;
+        let highScore = localStorage.getItem("highScore") || 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let currentWord = null;
+        let isAnswerCorrect = false;
+
+        document.getElementById("high-score").textContent = `High Score: ${highScore}`;
+
+        function startGame() {
+            score = 0;
+            timeLeft = 60;
+            document.getElementById("score-board").style.display = "flex";
+            document.getElementById("game-over").style.display = "none";
+            document.getElementById("start-btn").style.display = "none";
+            document.getElementById("timer").textContent = `Time Left: ${timeLeft}`;
+            loadNextWord();
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(function() {
+                timeLeft--;
+                document.getElementById("timer").textContent = `Time Left: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function loadNextWord() {
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            const correctDefinition = currentWord.definition;
+
+            // Set up vocab word
+            document.getElementById("vocab-word").textContent = currentWord.word;
+
+            // Create the definitions
+            const definitions = [...words.map(w => w.definition), correctDefinition].sort();
+            document.getElementById("definition-column").innerHTML = '';
+            definitions.forEach(def => {
+                const defElement = document.createElement('div');
+                defElement.classList.add('definition-card');
+                defElement.textContent = def;
+                defElement.addEventListener('click', () => checkAnswer(def, correctDefinition, defElement));
+                document.getElementById("definition-column").appendChild(defElement);
+            });
+        }
+
+        function checkAnswer(selectedDefinition, correctDefinition, defElement) {
+            const selectedElements = document.querySelectorAll('.definition-card');
+            selectedElements.forEach(el => el.classList.remove('selected')); // Reset any selected class
+
+            if (selectedDefinition === correctDefinition) {
+                defElement.classList.add('selected', 'correct');
+                score += 10 + Math.max(0, 5 - timeLeft); // Time bonus points
+                document.getElementById("score-count").textContent = score;
+                loadNextWord();
+            } else {
+                defElement.classList.add('selected', 'incorrect');
+            }
+        }
+
+        function endGame() {
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("highScore", highScore);
+                document.getElementById("high-score").textContent = `High Score: ${highScore}`;
+            }
+            document.getElementById("game-over").textContent = `Game Over! Final Score: ${score}`;
+            document.getElementById("game-over").style.display = "block";
+            document.getElementById("start-btn").style.display = "inline-block";
+        }
+    </script>
+</body>
+</html>
