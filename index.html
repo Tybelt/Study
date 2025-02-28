@@ -1,70 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Study - Sample Pages</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Repository Landing Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            text-align: center;
-            background-color: #f4f4f9;
-        }
-        header {
-            background-color: #333;
-            color: white;
-            padding: 20px 0;
-            margin-bottom: 20px;
-        }
-        h1 {
-            margin: 0;
-        }
-        .links {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
-        .link-item {
-            margin: 10px 0;
-            font-size: 18px;
+        h1 {
+            margin: 20px 0;
         }
-        a {
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            width: 90%;
+            max-width: 1000px;
+        }
+        .card {
             text-decoration: none;
-            color: #007BFF;
+            color: inherit;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        a:hover {
-            text-decoration: underline;
+        .card:hover {
+            transform: translateY(-5px);
         }
-        .image-container {
-            margin-top: 20px;
+        .card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background-color: #f0f0f0;
         }
-        img {
-            max-width: 90%;
-            height: auto;
-            border: 1px solid #ccc;
-            padding: 5px;
-            background: white;
+        .card-title {
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            background-color: #f8f8f8;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>JJ's Vocab Study Guide</h1>
-        <p>Current links provided below</p>
-    </header>
-    <div class="links">
-        <div class="link-item">
-            <a href="Vocab-Game.html">1-20 Game Format</a>
-        </div>
-        <div class="link-item">
-            <a href="Vocab3.html">1-20 Alt Format</a>
-        </div>
-    </div>
-    <div class="image-container">
-        <h2>Gallery</h2>
-        <img src="IMG_5062.png" alt="Uploaded Image">
-    </div>
+
+<h1>Study - Sample Pages</h1>
+<div id="page-list" class="container">
+    <!-- Cards will be inserted here via JS -->
+</div>
+
+<script>
+    const repoApiUrl = 'https://api.github.com/repos/Tybelt/Study/contents/';
+
+    fetch(repoApiUrl)
+        .then(response => response.json())
+        .then(files => {
+            const container = document.getElementById('page-list');
+            const thumbnailPath = 'thumbnails/'; // Assuming thumbnails are in /thumbnails/
+
+            files.forEach(file => {
+                if (file.name.endsWith('.html') && file.name !== 'index.html') {
+                    const card = document.createElement('a');
+                    card.href = file.name;
+                    card.className = 'card';
+
+                    const img = document.createElement('img');
+                    img.src = `${thumbnailPath}${file.name.replace('.html', '.png')}`;
+                    img.alt = file.name;
+
+                    // If thumbnail doesn't exist, use fallback image
+                    img.onerror = () => img.src = 'thumbnails/default.png';
+
+                    const title = document.createElement('div');
+                    title.className = 'card-title';
+                    title.textContent = file.name.replace('.html', '');
+
+                    card.appendChild(img);
+                    card.appendChild(title);
+                    container.appendChild(card);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading files from GitHub:', error);
+            document.getElementById('page-list').innerHTML = '<p>Failed to load page list.</p>';
+        });
+</script>
+
 </body>
 </html>
